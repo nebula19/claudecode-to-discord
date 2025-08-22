@@ -1,0 +1,6 @@
+{
+  "bot_token": "your-discord-bot-token-here",
+  "channel_id": "your-discord-channel-id-here",
+  "guild_id": "your-discord-server-id-here",
+  "display_name": ""
+}

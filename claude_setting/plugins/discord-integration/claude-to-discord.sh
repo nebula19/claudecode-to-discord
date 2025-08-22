@@ -209,12 +209,12 @@ if [ "$hook_event_name" = "Stop" ] && [ -n "$transcript_path" ] && [ -f "$transc
     
     # 결합된 메시지 생성 (Discord Markdown 문법 사용)
     combined_message="
-# 💬 사용자 질문
+## 💬 사용자 질문
 \`\`\`
 ${user_text}
 \`\`\`
 
-# 🤖 Claude 답변
+## 🤖 Claude 답변
 ${assistant_text}"
     
     # 기존 스레드 ID 확인

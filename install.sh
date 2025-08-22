@@ -37,13 +37,13 @@ echo ""
 
 # Discord Bot Token 입력 받기
 echo -e "${BLUE}🔑 Discord Bot Token을 입력해주세요${NC}"
-echo "형식: MTI..."
+echo "형식: MTI... 또는 MTQ..."
 echo "(Discord Developer Portal > Bot > Token)"
 echo ""
 read -p "Bot Token: " DISCORD_BOT_TOKEN < /dev/tty
 
-if [[ ! "$DISCORD_BOT_TOKEN" =~ ^MTI ]]; then
-    echo -e "${RED}오류: 올바른 Discord Bot Token 형식이 아닙니다. (MTI로 시작해야 함)${NC}"
+if [[ ! "$DISCORD_BOT_TOKEN" =~ ^MT[IQ] ]]; then
+    echo -e "${RED}오류: 올바른 Discord Bot Token 형식이 아닙니다. (MTI 또는 MTQ로 시작해야 함)${NC}"
     exit 1
 fi
 

@@ -72,7 +72,7 @@ transcript_path=$(echo "$input" | jq -r '.transcript_path')
 prompt=$(echo "$input" | jq -r '.prompt // empty')
 
 # 프로젝트 이름 추출
-project_name=$(basename "$(dirname "$transcript_path")" | sed 's/^-Users-[^-]*-//' | tr '-' '/')
+project_name=$(basename "$(pwd)")
 
 # 사용자 이름 및 날짜 추출
 user_name=$(whoami)

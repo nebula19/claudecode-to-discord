@@ -195,14 +195,15 @@ if [ "$hook_event_name" = "Stop" ]; then
         rm -f "$PROMPT_FILE"
     fi
 
-    # 2. transcript에서 assistant 응답 추출 + user_text 폴백
+    # 2. transcript에서 assistant 응답 추출 + user_text 폴백 + 최종 Stop 여부 판별
     if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
         _tmp_asst=$(mktemp)
         _tmp_user_fallback=$(mktemp)
-        python3 - "$transcript_path" "$_tmp_asst" "$_tmp_user_fallback" << 'PYEOF'
+        _tmp_is_final=$(mktemp)
+        python3 - "$transcript_path" "$_tmp_asst" "$_tmp_user_fallback" "$_tmp_is_final" << 'PYEOF'
 import json, sys
 
-transcript_path, asst_file, user_fallback_file = sys.argv[1], sys.argv[2], sys.argv[3]
+transcript_path, asst_file, user_fallback_file, is_final_file = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
 entries = []
 with open(transcript_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -236,31 +237,49 @@ for i, entry in enumerate(entries):
         last_user_text = text
         last_user_idx = i
 
-# 마지막 user 메시지 이후의 assistant 응답 찾기
+# 마지막 user 이후 assistant 메시지 수집
+# - asst_text: 마지막 assistant의 text (최종 응답)
+# - is_final: 마지막 assistant에 tool_use가 없으면 True (도구 호출 중이 아님)
 asst_text = None
+is_final = True
+
 if last_user_idx is not None:
+    last_asst_content = None
     for entry in entries[last_user_idx + 1:]:
         if entry.get('type') == 'assistant':
             content = entry.get('message', {}).get('content', [])
             if isinstance(content, list):
                 text = '\n'.join(c.get('text', '') for c in content if c.get('type') == 'text')
                 if text:
-                    asst_text = text
-                    break
+                    asst_text = text  # 계속 덮어써서 최종값 유지
+                last_asst_content = content
+
+    # 마지막 assistant 메시지에 tool_use가 있으면 아직 진행 중
+    if last_asst_content is not None:
+        if any(c.get('type') == 'tool_use' for c in last_asst_content):
+            is_final = False
 
 with open(asst_file, 'w', encoding='utf-8') as f:
     f.write(asst_text or '')
 with open(user_fallback_file, 'w', encoding='utf-8') as f:
     f.write(last_user_text or '')
+with open(is_final_file, 'w') as f:
+    f.write('true' if is_final else 'false')
 PYEOF
 
         assistant_text=$(cat "$_tmp_asst")
         user_text_fallback=$(cat "$_tmp_user_fallback")
-        rm -f "$_tmp_asst" "$_tmp_user_fallback"
+        is_final_stop=$(cat "$_tmp_is_final")
+        rm -f "$_tmp_asst" "$_tmp_user_fallback" "$_tmp_is_final"
 
         # UserPromptSubmit temp 파일이 없었으면 transcript에서 폴백
         if [ -z "$user_text" ]; then
             user_text="$user_text_fallback"
+        fi
+
+        # 도구 호출 중간 Stop이면 전송 스킵
+        if [ "$is_final_stop" = "false" ]; then
+            exit 0
         fi
     fi
 

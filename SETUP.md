@@ -2,6 +2,16 @@
 
 Claude Code CLI의 프롬프트와 AI 응답을 실시간으로 Discord 스레드에 전송하는 도구입니다.
 
+## 🔄 업데이트 (기존 설치자)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nebula19/claudecode-to-discord/main/update.sh | bash
+```
+
+설정 파일(`discord-config.json`)은 유지하고 스크립트와 hook 설정만 최신화합니다.
+
+---
+
 ## 🚀 빠른 설치 (원라인 설치)
 
 ### 자동 설치 스크립트 사용
